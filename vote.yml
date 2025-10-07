@@ -37,6 +37,7 @@ stages:
         command: 'build'
         Dockerfile: 'vote/Dockerfile'
         tags: '$(tag)'
+        latest
 - stage: Push
   displayName: Push
   jobs:
@@ -50,3 +51,4 @@ stages:
         repository: '$(imageRepository)'
         command: 'push'
         tags: '$(tag)'
+        latest
