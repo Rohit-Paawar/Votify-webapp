@@ -35,8 +35,9 @@ stages:
         repository: '$(imageRepository)'
         command: 'build'
         Dockerfile: 'worker/Dockerfile'
-        tags: '$(tag)'
-        latest
+        tags: |
+          $(tag)
+          latest   # <-- Push both tags
 - stage: Push
   displayName: Push
   jobs:
@@ -49,5 +50,6 @@ stages:
         containerRegistry: '$(dockerRegistryServiceConnection)'
         repository: '$(imageRepository)'
         command: 'push'
-        tags: '$(tag)'
-        latest
+        tags: |
+          $(tag)
+          latest   # <-- Push both tags
