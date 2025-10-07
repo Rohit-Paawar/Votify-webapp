@@ -14,7 +14,7 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM"
 
 WORKDIR /source
 COPY *.csproj .
-RUN dotnet restore -a $TARGETARCH
+RUN dotnet restore
 
 COPY . .
 RUN dotnet publish -c release -o /app --self-contained false --no-restore
