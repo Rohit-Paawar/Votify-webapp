@@ -37,6 +37,7 @@ stages:
         command: 'build'
         Dockerfile: 'result/Dockerfile'
         tags: '$(tag)'
+        latest
 - stage: Push
   displayName: Push
   jobs:
@@ -50,3 +51,4 @@ stages:
         repository: 'resultapp'
         command: 'push'
         tags: '$(tag)'
+        latest
