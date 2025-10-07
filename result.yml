@@ -20,7 +20,7 @@ variables:
 
   # Agent VM image name
 pool:
- name: 'votingapp-agent' 
+ name: 'Votingapp' 
 
 stages:
 - stage: Build
