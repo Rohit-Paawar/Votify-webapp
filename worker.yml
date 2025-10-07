@@ -15,7 +15,7 @@ variables:
   dockerRegistryServiceConnection: '39d6ed1e-d086-47d6-91b0-d3985d1de996'
   imageRepository: 'worker'
   containerRegistry: 'votifyacr.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/result/Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/worker/Dockerfile'
   tag: '$(Build.BuildId)'
 
 pool:
