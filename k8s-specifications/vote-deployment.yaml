@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: vote
   labels:
     app: vote
-  name: vote
 spec:
   replicas: 1
   selector:
@@ -15,8 +15,10 @@ spec:
         app: vote
     spec:
       containers:
-      - image: votifyacr.azurecr.io/voteapp:latest
-        name: vote
-        ports:
-        - containerPort: 80
-          name: vote
+        - name: vote
+          image: votifyacr.azurecr.io/voteapp:latest
+          ports:
+            - containerPort: 80
+              name: vote
+      imagePullSecrets:
+        - name: acr-pull-secret
