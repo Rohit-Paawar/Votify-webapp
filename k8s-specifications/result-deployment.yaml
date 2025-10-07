@@ -15,7 +15,7 @@ spec:
         app: result
     spec:
       containers:
-      - image: votifyacr.azurecr.io/result:latest
+      - image: votifyacr.azurecr.io/resultapp:latest
         name: result
         ports:
         - containerPort: 80
