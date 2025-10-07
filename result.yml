@@ -32,7 +32,7 @@ stages:
         Dockerfile: 'result/Dockerfile'
         tags: |
           $(tag)
-          latest   # <-- Add latest tag here
+          latest
 
 - stage: Push
   displayName: Push
@@ -48,4 +48,4 @@ stages:
         command: 'push'
         tags: |
           $(tag)
-          latest   # <-- Push both tags
+          latest
