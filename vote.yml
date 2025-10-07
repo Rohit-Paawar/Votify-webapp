@@ -38,7 +38,7 @@ stages:
         Dockerfile: 'vote/Dockerfile'
         tags: |
           $(tag)
-          latest   # <-- Push both tags
+          latest
 - stage: Push
   displayName: Push
   jobs:
@@ -53,4 +53,4 @@ stages:
         command: 'push'
         tags: |
           $(tag)
-          latest   # <-- Push both tags
+          latest
