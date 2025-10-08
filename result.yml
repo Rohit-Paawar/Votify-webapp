@@ -14,7 +14,7 @@ variables:
   tag: '$(Build.BuildId)'
 
 pool:
- name: 'Votingapp'
+  name: 'Votingapp'
 
 stages:
 - stage: BuildAndPush
@@ -39,15 +39,23 @@ stages:
           echo "Logging into ACR..."
           az acr login --name votifyacr
 
-    # Build and push ARM64 image using Docker Buildx
+    # Setup Buildx and QEMU for ARM64
     - script: |
-        echo "Enable BuildKit"
+        echo "Enable Docker experimental features"
+        export DOCKER_CLI_EXPERIMENTAL=enabled
         export DOCKER_BUILDKIT=1
 
-        echo "Create buildx builder (if not exists)"
-        docker buildx create --use || true
+        echo "Register QEMU emulators for cross-platform builds"
+        docker run --rm --privileged tonistiigi/binfmt --install all
 
-        echo "Build and push ARM64 image to ACR"
+        echo "Create and bootstrap Buildx builder"
+        docker buildx create --name mybuilder --use || echo "Builder already exists"
+        docker buildx inspect --bootstrap
+      displayName: Setup Buildx & QEMU for ARM64
+
+    # Build and push ARM64 image
+    - script: |
+        echo "Building and pushing ARM64 image to ACR..."
         docker buildx build \
           --platform linux/arm64 \
           -f $(Build.SourcesDirectory)/result/Dockerfile \
