@@ -28,7 +28,7 @@ stages:
     - task: DockerInstaller@0
       displayName: Install Docker
 
-    # Login to Azure
+    # Login to Azure Container Registry
     - task: AzureCLI@2
       displayName: Login to Azure
       inputs:
@@ -39,23 +39,13 @@ stages:
           echo "Logging into ACR..."
           az acr login --name votifyacr
 
-    # Setup Buildx and QEMU for ARM64
+    # Build and push ARM64 image using pre-setup Buildx
     - script: |
-        echo "Enable Docker experimental features"
-        export DOCKER_CLI_EXPERIMENTAL=enabled
+        echo "Enable BuildKit and experimental features"
         export DOCKER_BUILDKIT=1
+        export DOCKER_CLI_EXPERIMENTAL=enabled
 
-        echo "Register QEMU emulators for cross-platform builds"
-        docker run --rm --privileged tonistiigi/binfmt --install all
-
-        echo "Create and bootstrap Buildx builder"
-        docker buildx create --name mybuilder --use || echo "Builder already exists"
-        docker buildx inspect --bootstrap
-      displayName: Setup Buildx & QEMU for ARM64
-
-    # Build and push ARM64 image
-    - script: |
-        echo "Building and pushing ARM64 image to ACR..."
+        echo "Build and push ARM64 image to ACR"
         docker buildx build \
           --platform linux/arm64 \
           -f $(Build.SourcesDirectory)/result/Dockerfile \
