@@ -38,7 +38,7 @@ stages:
         tags: |
           $(tag)
           latest
-        arguments: '--platform linux/arm64'   
+           
 - stage: Push
   displayName: Push
   jobs:
@@ -54,4 +54,4 @@ stages:
         tags: |
           $(tag)
           latest
-        arguments: '--platform linux/arm64' 
+         
