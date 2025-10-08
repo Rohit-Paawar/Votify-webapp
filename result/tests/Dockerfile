@@ -1,4 +1,4 @@
-FROM node:8.9-slim
+FROM --platform=linux/arm64 node:8.9-slim
 
 RUN apt-get update -qq && apt-get install -qy \ 
     ca-certificates \
