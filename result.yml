@@ -7,8 +7,6 @@ resources:
 - repo: self
 
 variables:
-  # Azure Container Registry and image details
-  dockerRegistryServiceConnection: 'a5a1b2b0-3823-4d46-b405-a7aa63ecc2d5'
   containerRegistry: 'votifyacr.azurecr.io'
   imageRepository: 'resultapp'
   tag: '$(Build.BuildId)'
@@ -18,17 +16,13 @@ pool:
 
 stages:
 - stage: BuildAndPush
-  displayName: Build and Push ARM64 Image
+  displayName: Build and Push ARM64 Image via ACR
   jobs:
   - job: BuildPush
     displayName: Build & Push
     steps:
 
-    # Install Docker if not already present
-    - task: DockerInstaller@0
-      displayName: Install Docker
-
-    # Login to Azure Container Registry
+    # Login to Azure
     - task: AzureCLI@2
       displayName: Login to Azure
       inputs:
@@ -36,21 +30,21 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          echo "Logging into ACR..."
+          echo "Logging into Azure Container Registry..."
           az acr login --name votifyacr
 
-    # Build and push ARM64 image using pre-setup Buildx
-    - script: |
-        echo "Enable BuildKit and experimental features"
-        export DOCKER_BUILDKIT=1
-        export DOCKER_CLI_EXPERIMENTAL=enabled
-
-        echo "Build and push ARM64 image to ACR"
-        docker buildx build \
-          --platform linux/arm64 \
-          -f $(Build.SourcesDirectory)/result/Dockerfile \
-          -t $(containerRegistry)/$(imageRepository):$(tag) \
-          -t $(containerRegistry)/$(imageRepository):latest \
-          --push \
-          $(Build.SourcesDirectory)/result
-      displayName: Build & Push ARM64 Image
+    # Build and push ARM64 image using ACR
+    - task: AzureCLI@2
+      displayName: Build & Push ARM64 Image via ACR
+      inputs:
+        azureSubscription: 'votify-acr'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Starting ACR build for ARM64 image..."
+          az acr build \
+            --registry votifyacr \
+            --image $(imageRepository):$(tag) \
+            --image $(imageRepository):latest \
+            --platform linux/arm64 \
+            ./result
