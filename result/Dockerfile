@@ -1,22 +1,25 @@
-FROM --platform=linux/arm64 python:3.11-slim AS base
+FROM node:18-slim
 
+# add curl for healthcheck
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl tini && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/local/app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# have nodemon available for local dev use (file watching)
+RUN npm install -g nodemon
 
-FROM --platform=linux/arm64 python:3.11-slim AS final
+COPY package*.json ./
 
-WORKDIR /usr/local/app
-
-COPY --from=base /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=base /usr/local/bin /usr/local/bin
+RUN npm ci && \
+ npm cache clean --force && \
+ mv /usr/local/app/node_modules /node_modules
 
 COPY . .
 
+ENV PORT=80
 EXPOSE 80
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--log-file", "-", "--access-logfile", "-", "--workers", "4", "--keep-alive", "0"]
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["node", "server.js"]
