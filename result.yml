@@ -10,8 +10,8 @@ variables:
   containerRegistry: 'votifyacr.azurecr.io'
   imageRepository: 'resultapp'
   tag: '$(Build.BuildId)'
-  acrUsername: 'votifyacr'        # ACR username
-  acrPassword: $(acrPassword)      # Secret variable in DevOps
+  acrUsername: 'votifyacr'  # Can get via az acr credential show
+  # acrPassword will be set as a secret variable in the pipeline UI
 
 pool:
   name: 'Votingapp'
@@ -24,27 +24,30 @@ stages:
     displayName: Build & Push
     steps:
 
-    # Install Docker if not already present
+    # Install Docker
     - task: DockerInstaller@0
       displayName: Install Docker
 
-    # Docker login to ACR using username/password
+    # Docker login using secret variable
     - script: |
-        echo "Logging into ACR..."
+        echo "Logging into Azure Container Registry..."
         echo $(acrPassword) | docker login $(containerRegistry) -u $(acrUsername) --password-stdin
       displayName: Docker Login to ACR
 
-    # Setup Buildx builder for ARM64
+    # Setup QEMU for cross-platform build (ARM64)
     - script: |
-        export DOCKER_CLI_EXPERIMENTAL=enabled
-        export DOCKER_BUILDKIT=1
+        docker run --rm --privileged tonistiigi/binfmt --install all
+      displayName: Setup QEMU for ARM64
+
+    # Setup Buildx
+    - script: |
         docker buildx create --name mybuilder --use || true
         docker buildx inspect --bootstrap
-      displayName: Setup Buildx Builder
+      displayName: Setup Docker Buildx
 
-    # Build and push ARM64 image
+    # Build & Push ARM64 image
     - script: |
-        echo "Building and pushing ARM64 image..."
+        export DOCKER_BUILDKIT=1
         docker buildx build \
           --platform linux/arm64 \
           -f $(Build.SourcesDirectory)/result/Dockerfile \
