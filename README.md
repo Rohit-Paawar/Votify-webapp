@@ -97,3 +97,9 @@ worker-5bbf648984-lw95q 1/1     Running   0          81m
 **Conclusion:** All five microservice pods (`db`, `redis`, `result`, `vote`, `worker`) are confirmed to be in the **Running** state, indicating a successful and fully distributed application deployment via the automated CI/CD pipeline.
 
 -----
+### OP
+
+![111](https://github.com/user-attachments/assets/f68b7d9e-9b12-4bdc-8b5c-ff1a7bcdcdaf)
+
+![ezgif-5e3697ecc268dc](https://github.com/user-attachments/assets/efff0136-af55-414e-ac59-fc536d423b9e)
+
