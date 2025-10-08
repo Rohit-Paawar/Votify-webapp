@@ -51,7 +51,7 @@ stages:
     # Build and push ARM64 image using Buildx
     - script: |
         docker buildx build \
-          --platform linux/arm64 \
+          --platform linux/arm64, linux/amd64 \
           -f $(Build.SourcesDirectory)/result/Dockerfile \
           -t $(containerRegistry)/$(imageRepository):$(tag) \
           -t $(containerRegistry)/$(imageRepository):latest \
