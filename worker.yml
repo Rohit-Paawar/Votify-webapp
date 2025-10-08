@@ -52,4 +52,5 @@ stages:
         command: 'push'
         tags: |
           $(tag)
-          latest   
+          latest
+        arguments: '--platform linux/amd64,linux/arm64'   
