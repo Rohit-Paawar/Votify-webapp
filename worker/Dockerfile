@@ -1,7 +1,7 @@
 # -----------------------
 # Build Stage
 # -----------------------
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
 # Print build info for debugging
 ARG TARGETPLATFORM
@@ -22,7 +22,7 @@ RUN dotnet publish -c Release -o /app --self-contained false --no-restore
 # -----------------------
 # Runtime Stage
 # -----------------------
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/runtime:7.0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime:7.0 AS runtime
 
 WORKDIR /app
 
