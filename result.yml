@@ -16,11 +16,15 @@ pool:
 
 stages:
 - stage: BuildAndPush
-  displayName: Build and Push ARM64 Image via ACR
+  displayName: Build and Push ARM64 Image
   jobs:
   - job: BuildPush
     displayName: Build & Push
     steps:
+
+    # Install Docker if not already present
+    - task: DockerInstaller@0
+      displayName: Install Docker
 
     # Login to Azure
     - task: AzureCLI@2
@@ -30,21 +34,27 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          echo "Logging into Azure..."
-          az account set --subscription a6da4d80-5687-44ae-b032-172418adb940
+          echo "Logging into Azure Container Registry..."
+          az acr login --name votifyacr
 
-    # Build and push ARM64 image using ACR Premium
-    - task: AzureCLI@2
-      displayName: Build & Push ARM64 Image via ACR
-      inputs:
-        azureSubscription: 'votify-acr'
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          echo "Starting ACR build for ARM64 image..."
-          az acr build \
-            --registry votifyacr \
-            --image $(imageRepository):$(tag) \
-            --image $(imageRepository):latest \
-            --platform linux/arm64 \
-            ./result
+    # Setup QEMU for ARM64 builds (needed for cross-platform builds)
+    - script: |
+        docker run --rm --privileged tonistiigi/binfmt --install all
+      displayName: Setup QEMU for cross-platform builds
+
+    # Setup Docker Buildx
+    - script: |
+        docker buildx create --name mybuilder --use || true
+        docker buildx inspect --bootstrap
+      displayName: Setup Docker Buildx
+
+    # Build and push ARM64 image using Buildx
+    - script: |
+        docker buildx build \
+          --platform linux/arm64 \
+          -f $(Build.SourcesDirectory)/result/Dockerfile \
+          -t $(containerRegistry)/$(imageRepository):$(tag) \
+          -t $(containerRegistry)/$(imageRepository):latest \
+          --push \
+          $(Build.SourcesDirectory)/result
+      displayName: Build & Push ARM64 Image
