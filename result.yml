@@ -7,45 +7,52 @@ resources:
 - repo: self
 
 variables:
+  # Azure Container Registry and image details
   dockerRegistryServiceConnection: 'a5a1b2b0-3823-4d46-b405-a7aa63ecc2d5'
-  imageRepository: 'resultapp'
   containerRegistry: 'votifyacr.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/result/Dockerfile'
+  imageRepository: 'resultapp'
   tag: '$(Build.BuildId)'
 
 pool:
-  name: 'Votingapp' 
+  vmImage: 'ubuntu-latest'
 
 stages:
-- stage: Build
-  displayName: Build
+- stage: BuildAndPush
+  displayName: Build and Push ARM64 Image
   jobs:
-  - job: Build
-    displayName: Build
+  - job: BuildPush
+    displayName: Build & Push
     steps:
-    - task: Docker@2
-      displayName: Build image
-      inputs:
-        containerRegistry: 'votifyacr'
-        repository: 'resultapp'
-        command: 'build'
-        Dockerfile: 'result/Dockerfile'
-        tags: |
-          $(tag)
-          latest
 
-- stage: Push
-  displayName: Push
-  jobs:
-  - job: Push
-    displayName: Push image
-    steps:
-    - task: Docker@2
-      displayName: Push image
+    # Install Docker if not already present
+    - task: DockerInstaller@0
+      displayName: Install Docker
+
+    # Login to Azure
+    - task: AzureCLI@2
+      displayName: Login to Azure
       inputs:
-        containerRegistry: 'votifyacr'
-        repository: 'resultapp'
-        command: 'push'
-        tags: |
-          $(tag)
-          latest
+        azureSubscription: 'votify-acr'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging into ACR..."
+          az acr login --name votifyacr
+
+    # Build and push ARM64 image using Docker Buildx
+    - script: |
+        echo "Enable BuildKit"
+        export DOCKER_BUILDKIT=1
+
+        echo "Create buildx builder (if not exists)"
+        docker buildx create --use || true
+
+        echo "Build and push ARM64 image to ACR"
+        docker buildx build \
+          --platform linux/arm64 \
+          -f $(Build.SourcesDirectory)/result/Dockerfile \
+          -t $(containerRegistry)/$(imageRepository):$(tag) \
+          -t $(containerRegistry)/$(imageRepository):latest \
+          --push \
+          $(Build.SourcesDirectory)/result
+      displayName: Build & Push ARM64 Image
