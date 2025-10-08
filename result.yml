@@ -10,49 +10,41 @@ variables:
   containerRegistry: 'votifyacr.azurecr.io'
   imageRepository: 'resultapp'
   tag: '$(Build.BuildId)'
-  acrUsername: 'votifyacr'  # Can get via az acr credential show
-  # acrPassword will be set as a secret variable in the pipeline UI
 
 pool:
   name: 'Votingapp'
 
 stages:
 - stage: BuildAndPush
-  displayName: Build and Push ARM64 Image
+  displayName: Build and Push ARM64 Image via ACR
   jobs:
   - job: BuildPush
     displayName: Build & Push
     steps:
 
-    # Install Docker
-    - task: DockerInstaller@0
-      displayName: Install Docker
+    # Login to Azure
+    - task: AzureCLI@2
+      displayName: Login to Azure
+      inputs:
+        azureSubscription: 'votify-acr'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging into Azure..."
+          az account set --subscription a6da4d80-5687-44ae-b032-172418adb940
 
-    # Docker login using secret variable
-    - script: |
-        echo "Logging into Azure Container Registry..."
-        echo $(acrPassword) | docker login $(containerRegistry) -u $(acrUsername) --password-stdin
-      displayName: Docker Login to ACR
-
-    # Setup QEMU for cross-platform build (ARM64)
-    - script: |
-        docker run --rm --privileged tonistiigi/binfmt --install all
-      displayName: Setup QEMU for ARM64
-
-    # Setup Buildx
-    - script: |
-        docker buildx create --name mybuilder --use || true
-        docker buildx inspect --bootstrap
-      displayName: Setup Docker Buildx
-
-    # Build & Push ARM64 image
-    - script: |
-        export DOCKER_BUILDKIT=1
-        docker buildx build \
-          --platform linux/arm64 \
-          -f $(Build.SourcesDirectory)/result/Dockerfile \
-          -t $(containerRegistry)/$(imageRepository):$(tag) \
-          -t $(containerRegistry)/$(imageRepository):latest \
-          --push \
-          $(Build.SourcesDirectory)/result
-      displayName: Build & Push ARM64 Image
+    # Build and push ARM64 image using ACR Premium
+    - task: AzureCLI@2
+      displayName: Build & Push ARM64 Image via ACR
+      inputs:
+        azureSubscription: 'votify-acr'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Starting ACR build for ARM64 image..."
+          az acr build \
+            --registry votifyacr \
+            --image $(imageRepository):$(tag) \
+            --image $(imageRepository):latest \
+            --platform linux/arm64 \
+            ./result
